@@ -19,6 +19,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 
 import org.p2f1.controllers.MainWindowController;
 
@@ -29,15 +30,12 @@ public class MainWindowView  extends JFrame{
 	public static final String BTN_UART = "BTN_UART";
 	public static final String BTN_INFRAROJOS = "BTN_INFRAROJOS";
 	
-	//Constants que contenen la mida de la pantalla de l'usuari
 	private static final int SCREEN_WIDTH = (int) Toolkit.getDefaultToolkit().getScreenSize().getWidth();
 	private static final int SCREEN_HEIGHT = (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight();
 	
-	//Constants que indiquen la mida de la finestra per defecte
 	private static final int WINDOW_WIDTH = 800;
 	private static final int WINDOW_HEIGHT = 600;
 	
-	//Declarem les variables dels elements de la finestra gràfica
 	private JPanel topPanel = null;
 	private JPanel centerPanel = null;
 	private JPanel bottomPanel = null;
@@ -57,17 +55,14 @@ public class MainWindowView  extends JFrame{
 	private JComboBox<Integer> comboBaud = new JComboBox<Integer>();
 	private JComboBox<String> comboPort = new JComboBox<String>();
 	
-	//Variable pel JFileChooser
 	private JFileChooser fileChooser = new JFileChooser();
 	
-	//Constructor de la classe MainWindowView (finestra gràfica)
 	public MainWindowView(){
 		configureWindow();
 		configureTopPanel();
 		configureCenterPanel();
 		configureBottomPanel();
 		
-		//Controlador del botó de selecció de fitxer
 		btnPath.addActionListener(new ActionListener() {
 			
 			@Override
@@ -86,7 +81,6 @@ public class MainWindowView  extends JFrame{
 		
 	}
 	
-	//Configurem els paràmetres de la finestra
 	private void configureWindow(){
 		setTitle("[SDM] Pràctica 2 - Màquina escurabutxaques");
 		setSize(new Dimension(WINDOW_WIDTH,WINDOW_HEIGHT));
@@ -95,10 +89,8 @@ public class MainWindowView  extends JFrame{
 		setLayout(new BorderLayout());
 	}
 	
-	//Configura el panell superior i els seus components
 	private void configureTopPanel(){
 		
-		//Configurem els JPanels
 		topPanel = new JPanel();
 		infoPanel = new JPanel();
 		portPanel = new JPanel();
@@ -107,51 +99,39 @@ public class MainWindowView  extends JFrame{
 		infoPanel.setLayout(new BoxLayout(infoPanel,BoxLayout.Y_AXIS));
 		portPanel.setLayout(new FlowLayout());
 		
-		//Configurem les labels
 		lblJugades = new JLabel("Numero Jugades: X");
 		lblPremis = new JLabel("Total Premis : Y");
 		lblBaudRate = new JLabel("BaudRate: ");
 		lblPort = new JLabel("Port: ");
 		
-		//Afegim les labels al infoPanel
 		infoPanel.add(lblJugades);
 		infoPanel.add(lblPremis);
 		
-		
-		//Afegim els components al port Panel
 		portPanel.add(lblBaudRate);
 		portPanel.add(comboBaud);
 		portPanel.add(lblPort);
 		portPanel.add(comboPort);
 		
-		//Afegim l'infoPanel al topPanel (alineat a l'esquerra)
 		topPanel.add(infoPanel,BorderLayout.WEST);
 		topPanel.add(portPanel,BorderLayout.EAST);
 
-		
-		//Afegim el topPanel a la finestra
 		add(topPanel,BorderLayout.NORTH);
 		
 	}
 	
-	//Configura el panell central i els seus components
 	private void configureCenterPanel(){
 		
-		//Creem els panells
 		centerPanel = new JPanel();
 		filePanel = new JPanel();
 		centerPanel.setLayout(new BoxLayout(centerPanel,BoxLayout.Y_AXIS));
 		filePanel.setLayout(new FlowLayout());
 		filePanel.setMaximumSize(new Dimension(1000,50));
 		
-		//Creem els TextFields
 		txtPath = new JTextField();
 		txtPath.setPreferredSize(new Dimension(500,30));
 		
-		//Creem les labels
 		lblPath = new JLabel("Path: ");
 		
-		//Creem els botons
 		btnPath = new JButton("...");
 		btnUART = new JButton("Carrega Fitxer");
 		btnInfraRojos = new JButton("EnviaIR");
@@ -164,12 +144,10 @@ public class MainWindowView  extends JFrame{
 		btnInfraRojos.setPreferredSize(new Dimension(200,50));
 		btnUART.setPreferredSize(new Dimension(200,50));
 		
-		//Agefim els controls al panell del fitxer
 		filePanel.add(lblPath);
 		filePanel.add(txtPath);
 		filePanel.add(btnPath);
 		
-		//Afegim els controls al panell central
 		centerPanel.add(Box.createVerticalGlue());
 		centerPanel.add(filePanel);
 		centerPanel.add(Box.createRigidArea(new Dimension(100,50)));
@@ -178,20 +156,17 @@ public class MainWindowView  extends JFrame{
 		centerPanel.add(btnInfraRojos);
 		centerPanel.add(Box.createVerticalGlue());
 		
-		//Afegim el panell central a la finestra
 		add(centerPanel,BorderLayout.CENTER);
 	}
 	
-	//Configura el panell inferior i els seus components
-	//Configura el panell inferior i els seus components
 	private void configureBottomPanel(){
 		
-		//Configurem el panell del footer
 		bottomPanel = new JPanel();
 		bottomPanel.setLayout(new BorderLayout());
 		
-		//Configurem la progressbar
 		progressBar = new JProgressBar();
+		progressBar.setMinimum(0);
+		progressBar.setMaximum(100);
 		progressBar.setValue(0);
 		progressBar.setStringPainted(true);
 		
@@ -203,11 +178,9 @@ public class MainWindowView  extends JFrame{
 
 	public void associateController(MainWindowController controller){
 		
-		//Assignem el nom per distingir els botons
 		btnUART.setName(BTN_UART);
 		btnInfraRojos.setName(BTN_INFRAROJOS);
 		
-		//Assignem el controlador dels botons
 		btnInfraRojos.addActionListener(controller);
 		btnUART.addActionListener(controller);
 		
@@ -230,5 +203,26 @@ public class MainWindowView  extends JFrame{
 	public String getFile(){
 		return txtPath.getText();
 	}
+	
+	public Integer getBaudrate(){
+		return (Integer) comboBaud.getSelectedItem();
+	}
+	
+	public String getPort(){
+		return comboPort.getSelectedItem().toString();
+	}
+	
+	public void setProgressBarValue(int i){
+		
+	}
+	
+	public void updateProgressBar(int i) {
+		Thread t = new Thread(new Runnable() {
+	        public void run() {
+	            progressBar.setValue(i);
+	        }
+	    });
+	    t.start();
+    }
 	
 }
