@@ -201,22 +201,21 @@ public class MainWindowView  extends JFrame{
 	}
 	
 	public String getFile(){
-		return txtPath.getText();
+		//return txtPath.getText();
+		return "/Users/Roger/Documents/eclipse/P2F1/src/org/p2f1/assets/data.txt";
 	}
 	
 	public Integer getBaudrate(){
-		return (Integer) comboBaud.getSelectedItem();
+		//return (Integer) comboBaud.getSelectedItem();
+		return 19200;
 	}
 	
 	public String getPort(){
-		return comboPort.getSelectedItem().toString();
+		//return comboPort.getSelectedItem().toString();
+		return "tty.usbserial";
 	}
 	
-	public void setProgressBarValue(int i){
-		
-	}
-	
-	public void updateProgressBar(int i) {
+	public void setProgressBarValue(int i) {
 		Thread t = new Thread(new Runnable() {
 	        public void run() {
 	            progressBar.setValue(i);
@@ -224,5 +223,13 @@ public class MainWindowView  extends JFrame{
 	    });
 	    t.start();
     }
+	
+	public void setGames(int i) {
+		lblJugades.setText("Numero Jugades: " + i);
+	}
+	
+	public void setPrice(int i) {
+		lblPremis.setText("Total Premis: " + i);
+	}
 	
 }
