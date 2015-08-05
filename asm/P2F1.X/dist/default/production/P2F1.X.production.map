@@ -1,5 +1,5 @@
 MPLINK 5.08, LINKER
-Linker Map File - Created Fri Jul 31 20:08:28 2015
+Linker Map File - Created Wed Aug  5 21:36:51 2015
 
                                  Section Info
                   Section       Type    Address   Location Size(Bytes)
@@ -7,7 +7,7 @@ Linker Map File - Created Fri Jul 31 20:08:28 2015
                    .org_0       code   0x000000    program   0x000004
                    .cinit    romdata   0x000004    program   0x000002
                    .org_1       code   0x000008    program   0x000004
-                   .org_2       code   0x000018    program   0x0000c0
+                   .org_2       code   0x000018    program   0x000124
 .config_300001_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x300001    program   0x000001
 .config_300003_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x300003    program   0x000001
 .config_300005_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x300005    program   0x000001
@@ -19,58 +19,68 @@ Linker Map File - Created Fri Jul 31 20:08:28 2015
                            ---------   ---------      
                             0x000000    0x000005      
                             0x000008    0x00000b      
-                            0x000018    0x0000d7      
+                            0x000018    0x00013b      
                             0x300001    0x300001      
                             0x300003    0x300003      
                             0x300005    0x300005      
-            205 out of 8472 program addresses used, program memory utilization is 2%
+            305 out of 8472 program addresses used, program memory utilization is 3%
 
 
 
                               Symbols - Sorted by Name
                      Name    Address   Location    Storage File                     
                 ---------  ---------  ---------  --------- ---------                
-          AVOIDCHECKIDBIT   0x000098    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
-               CHECKIDBIT   0x00008c    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
-             CHECKIDVALUE   0x00007c    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
-                  CHECKRX   0x0000b8    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
-              CHECKVALORS   0x000064    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
-               COUNTBYTES   0x00005e    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
-                 HIGH_INT   0x00001c    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
-              INCPROGRESS   0x000074    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
-                 INIT_CPU   0x000020    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
-          INIT_INTERRUPTS   0x000040    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
-               INIT_PORTS   0x000028    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
-                INIT_TXRX   0x000048    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
-                     LOOP   0x0000d0    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
-                  LOW_INT   0x00001e    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
-                     MAIN   0x0000c0    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
-                     SEND   0x00009a    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
-                   SERIAL   0x0000a8    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
-                   WAITTX   0x0000a0    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+          AVOIDCHECKIDBIT   0x0000bc    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+                 BLINKING   0x000106    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+               CHECKIDBIT   0x0000b0    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+             CHECKIDVALUE   0x0000a0    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+                  CHECKRX   0x0000dc    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+              CHECKVALORS   0x000088    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+                  CLRLEDS   0x0000ee    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+               COUNTBYTES   0x000082    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+                 HIGH_INT   0x00001a    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+              INCPROGRESS   0x000098    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+                 INIT_CPU   0x00002c    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+          INIT_INTERRUPTS   0x000042    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+               INIT_PORTS   0x000064    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+                INIT_TMR0   0x000034    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+                INIT_TXRX   0x00004e    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+                     LOOP   0x000134    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+                     MAIN   0x000120    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+                     SEND   0x0000be    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+                   SERIAL   0x0000cc    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+                   SETLED   0x0000f4    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+                  SETLEDS   0x0000fa    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+                 WAITTICS   0x0000e4    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+                   WAITTX   0x0000c4    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
 
 
 
                               Symbols - Sorted by Address
                      Name    Address   Location    Storage File                     
                 ---------  ---------  ---------  --------- ---------                
-                 HIGH_INT   0x00001c    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
-                  LOW_INT   0x00001e    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
-                 INIT_CPU   0x000020    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
-               INIT_PORTS   0x000028    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
-          INIT_INTERRUPTS   0x000040    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
-                INIT_TXRX   0x000048    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
-               COUNTBYTES   0x00005e    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
-              CHECKVALORS   0x000064    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
-              INCPROGRESS   0x000074    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
-             CHECKIDVALUE   0x00007c    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
-               CHECKIDBIT   0x00008c    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
-          AVOIDCHECKIDBIT   0x000098    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
-                     SEND   0x00009a    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
-                   WAITTX   0x0000a0    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
-                   SERIAL   0x0000a8    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
-                  CHECKRX   0x0000b8    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
-                     MAIN   0x0000c0    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
-                     LOOP   0x0000d0    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+                 HIGH_INT   0x00001a    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+                 INIT_CPU   0x00002c    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+                INIT_TMR0   0x000034    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+          INIT_INTERRUPTS   0x000042    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+                INIT_TXRX   0x00004e    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+               INIT_PORTS   0x000064    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+               COUNTBYTES   0x000082    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+              CHECKVALORS   0x000088    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+              INCPROGRESS   0x000098    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+             CHECKIDVALUE   0x0000a0    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+               CHECKIDBIT   0x0000b0    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+          AVOIDCHECKIDBIT   0x0000bc    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+                     SEND   0x0000be    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+                   WAITTX   0x0000c4    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+                   SERIAL   0x0000cc    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+                  CHECKRX   0x0000dc    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+                 WAITTICS   0x0000e4    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+                  CLRLEDS   0x0000ee    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+                   SETLED   0x0000f4    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+                  SETLEDS   0x0000fa    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+                 BLINKING   0x000106    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+                     MAIN   0x000120    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
+                     LOOP   0x000134    program     static /Users/Roger/Documents/github/slot/asm/P2F1.X/main.asm
 
 

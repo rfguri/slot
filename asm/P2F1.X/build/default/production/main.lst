@@ -1,4 +1,4 @@
-MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   7-31-2015  20:08:27         PAGE  1
+MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   8-5-2015  21:36:50         PAGE  1
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -44,177 +44,249 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
   00000001            00028 IDBIT EQU 0x01
                       00029     
   00000001            00030 TEMP EQU 0x01
-  00000002            00031 ACC EQU 0x02
+  00000002            00031 BYTES EQU 0x02
   00000003            00032 IDVALUE EQU 0x03
-                      00033  
-                      00034 ;*************
-                      00035 ;* CONSTANTS *
+  00000004            00033 TICS EQU 0x04
+  00000005            00034 COUNTER EQU 0x05
+                      00035  
                       00036 ;*************
-                      00037 
-                      00038 ;*****************************
-                      00039 ; ITERRUPT AND RESET VECTORS *
+                      00037 ;* CONSTANTS *
+                      00038 ;*************
+                      00039 
                       00040 ;*****************************
-                      00041 
-                      00042     ORG 0x000000
-000000 EF?? F???      00043         GOTO MAIN
-MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   7-31-2015  20:08:27         PAGE  2
+                      00041 ; ITERRUPT AND RESET VECTORS *
+                      00042 ;*****************************
+                      00043 
+MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   8-5-2015  21:36:50         PAGE  2
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00044 
-                      00045     ORG 0x000008
-000008 EF?? F???      00046         GOTO HIGH_INT
-                      00047 
-                      00048     ORG 0x000018
-000018 EF?? F???      00049         GOTO LOW_INT
-                      00050 
-                      00051 ;*******
-                      00052 ;* RSI *
+                      00044     ORG 0x000000
+000000 EF?? F???      00045         GOTO MAIN
+                      00046 
+                      00047     ORG 0x000008
+000008 EF?? F???      00048         GOTO HIGH_INT
+                      00049 
+                      00050     ORG 0x000018
+000018 0011           00051         RETFIE FAST
+                      00052 
                       00053 ;*******
-                      00054 
-00001C                00055 HIGH_INT
-00001C 0010           00056     retfie
-                      00057 
-00001E                00058 LOW_INT
-00001E 0010           00059     retfie      
-                      00060 
-                      00061 ;*********
-                      00062 ;* INITS *
-                      00063 ;*********
-                      00064 
-000020                00065 INIT_CPU
-000020 0E74           00066     MOVLW 0x74
-000022 6ED3           00067     MOVWF OSCCON ; 8MHz Internal Oscilator
-000024 8C9B           00068     BSF OSCTUNE, PLLEN, 0
-000026 0012           00069     RETURN
+                      00054 ;* RSI *
+                      00055 ;*******
+                      00056 
+00001A                00057 HIGH_INT
+00001A A4F2           00058     BTFSS INTCON, TMR0IF, 0
+00001C 0011           00059     RETFIE FAST
+                      00060     
+                      00061     ; Resetegem Timer0
+00001E 94F2           00062     BCF INTCON, TMR0IF
+000020 0EE0           00063     MOVLW   0xE0
+000022 6ED7           00064     MOVWF   TMR0H, 0
+000024 0EBF           00065     MOVLW   0xBF
+000026 6ED6           00066     MOVWF   TMR0L, 0
+                      00067     
+                      00068     ; Incrementem tics
+000028 2A04           00069     INCF TICS, 1, 0
                       00070     
-000028                00071 INIT_PORTS
-000028 6A93           00072     CLRF TRISB
-00002A 6A81           00073     CLRF PORTB
-                      00074     
-00002C 9694           00075     BCF TRISC, 3, 0
-00002E 9894           00076     BCF TRISC, 4, 0
-000030 968B           00077     BCF LATC, 3, 0
-000032 868B           00078     BSF LATC, 3, 0
-                      00079     
-000034 6A00           00080     CLRF FLAGS
-000036 6A01           00081     CLRF IDBIT
-000038 6A01           00082     CLRF TEMP
-00003A 6A02           00083     CLRF ACC
-00003C 6A03           00084     CLRF IDVALUE
-                      00085     
-00003E 0012           00086     RETURN
-                      00087 
-000040                00088 INIT_INTERRUPTS
-000040 8ED0           00089     BSF RCON, IPEN, 0
-000042 92F2           00090     BCF INTCON, GIE/GIEH, 0
-000044 92F2           00091     BCF INTCON, PEIE/GIEL, 0
-000046 0012           00092     RETURN
-                      00093 
-000048                00094 INIT_TXRX
-000048 0E00           00095     MOVLW 0x00
-00004A 6EB0           00096     MOVWF SPBRGH
-MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   7-31-2015  20:08:27         PAGE  3
+00002A 0011           00071     RETFIE FAST
+                      00072 
+                      00073 ;*********
+                      00074 ;* INITS *
+                      00075 ;*********
+                      00076 
+00002C                00077 INIT_CPU
+00002C 0E74           00078     MOVLW 0x74
+00002E 6ED3           00079     MOVWF OSCCON ; 8MHz Internal Oscilator
+000030 8C9B           00080     BSF OSCTUNE, PLLEN, 0
+000032 0012           00081     RETURN
+                      00082     
+000034                00083 INIT_TMR0 
+                      00084     ; Tins = 4 / 32MHz = 125ns
+                      00085     ; Timer = 1 ms
+                      00086     ; Steps = 1ms / 125ns = 8000
+                      00087     ; Timer (16 bits) = 65535
+                      00088     ; TMR0H/TMR0L = 57535 = 0xE0BF
+000034 0E88           00089     MOVLW   0x88
+000036 6ED5           00090     MOVWF   T0CON, 0
+000038 0EE0           00091     MOVLW   0xE0
+00003A 6ED7           00092     MOVWF   TMR0H, 0
+00003C 0EBF           00093     MOVLW   0xBF
+00003E 6ED6           00094     MOVWF   TMR0L, 0
+000040 0012           00095     RETURN
+                      00096     
+MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   8-5-2015  21:36:50         PAGE  3
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-00004C 0E19           00097     MOVLW 0x19
-00004E 6EAF           00098     MOVWF SPBRG
-000050 94AC           00099     BCF TXSTA, BRGH, 0
-000052 96B8           00100     BCF BAUDCON, BRG16, 0 ; Baud rate generator at 19200
-000054 98AC           00101     BCF TXSTA, SYNC, 0 ; Asynchronous mode
-000056 8EAB           00102     BSF RCSTA, SPEN, 0 ; Enable serial
-000058 8AAC           00103     BSF TXSTA, TXEN, 0 ; Enable transmision
-00005A 88AB           00104     BSF RCSTA, CREN, 0 ; Enable reception
-00005C 0012           00105     RETURN
-                      00106 
-                      00107 ;*************
-                      00108 ;* FUNCTIONS *
-                      00109 ;*************
-                      00110 
-00005E                00111 COUNTBYTES
-00005E 9200           00112     BCF FLAGS, IDBIT, 0
-000060 6A02           00113     CLRF ACC, 0
-000062 0012           00114     RETURN
-                      00115     
-000064                00116 CHECKVALORS
-000064 2A02           00117     INCF ACC, 1, 0
-000066 0E07           00118     MOVLW 0x07
-000068 5C02           00119     SUBWF ACC, 0, 0
-00006A B4D8           00120     BTFSC STATUS, Z, 0
-00006C EC?? F???      00121     CALL COUNTBYTES
-000070 EF?? F???      00122     GOTO AVOIDCHECKIDBIT
-                      00123 
-000074                00124 INCPROGRESS
-000074 888B           00125     BSF LATC, 4, 0
-000076 988B           00126     BCF LATC, 4, 0
-000078 9200           00127     BCF FLAGS, IDBIT, 0
-00007A 0012           00128     RETURN
-                      00129     
-00007C                00130 CHECKIDVALUE
-00007C C001 F003      00131     MOVFF TEMP, IDVALUE
-000080 0E02           00132     MOVLW 0x02
-000082 5C03           00133     SUBWF IDVALUE, 0, 0
-000084 A4D8           00134     BTFSS STATUS, Z, 0
-000086 EC?? F???      00135     CALL INCPROGRESS
-00008A 0012           00136     RETURN
+000042                00097 INIT_INTERRUPTS
+000042 8ED0           00098     BSF RCON, IPEN      ; disable priority interrups
+000044 8AF2           00099     BSF INTCON, TMR0IE  ; enables the TMR0 overflow interrupt
+000046 94F2           00100     BCF INTCON, TMR0IF  ; clear the TMR0 overflow flag
+000048 8EF2           00101     BSF INTCON, GIE     ; enables all unmasked interrupts
+00004A 8CF2           00102     BSF INTCON, PEIE    ; enables all unmasked peripheral interrupts
+00004C 0012           00103     RETURN
+                      00104     
+00004E                00105 INIT_TXRX
+00004E 0E00           00106     MOVLW 0x00
+000050 6EB0           00107     MOVWF SPBRGH
+000052 0E19           00108     MOVLW 0x19
+000054 6EAF           00109     MOVWF SPBRG
+000056 94AC           00110     BCF TXSTA, BRGH, 0
+000058 96B8           00111     BCF BAUDCON, BRG16, 0 ; Baud rate generator at 19200
+00005A 98AC           00112     BCF TXSTA, SYNC, 0 ; Asynchronous mode
+00005C 8EAB           00113     BSF RCSTA, SPEN, 0 ; Enable serial
+00005E 8AAC           00114     BSF TXSTA, TXEN, 0 ; Enable transmision
+000060 88AB           00115     BSF RCSTA, CREN, 0 ; Enable reception
+000062 0012           00116     RETURN
+                      00117     
+000064                00118 INIT_PORTS
+000064 6A93           00119     CLRF TRISB
+000066 6A81           00120     CLRF PORTB
+                      00121     
+000068 9694           00122     BCF TRISC, 3, 0
+00006A 968B           00123     BCF LATC, 3, 0
+00006C 868B           00124     BSF LATC, 3, 0
+                      00125     
+00006E 9894           00126     BCF TRISC, 4, 0  
+000070 988B           00127     BCF LATC, 4, 0
+                      00128     
+000072 9A94           00129     BCF TRISC, 5, 0
+000074 9A8B           00130     BCF LATC, 5, 0
+                      00131     
+000076 6A00           00132     CLRF FLAGS
+000078 6A01           00133     CLRF IDBIT
+00007A 6A01           00134     CLRF TEMP
+00007C 6A02           00135     CLRF BYTES
+00007E 6A03           00136     CLRF IDVALUE
                       00137     
-00008C                00138 CHECKIDBIT
-00008C B200           00139     BTFSC FLAGS, IDBIT, 0
-00008E EF?? F???      00140     GOTO CHECKVALORS
-000092 8200           00141     BSF FLAGS, IDBIT, 0
-000094 EC?? F???      00142     CALL CHECKIDVALUE
-000098                00143 AVOIDCHECKIDBIT
-000098 0012           00144     RETURN
-                      00145     
-00009A                00146 SEND
-00009A 8AAC           00147     BSF TXSTA, TXEN, 0
-00009C C001 FFAD      00148     MOVFF TEMP, TXREG
-0000A0                00149 WAITTX
-MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   7-31-2015  20:08:27         PAGE  4
+000080 0012           00138     RETURN
+                      00139 
+                      00140 ;*************
+                      00141 ;* FUNCTIONS *
+                      00142 ;*************
+                      00143 
+000082                00144 COUNTBYTES
+000082 9200           00145     BCF FLAGS, IDBIT, 0
+000084 6A02           00146     CLRF BYTES, 0
+000086 0012           00147     RETURN
+                      00148     
+000088                00149 CHECKVALORS
+MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   8-5-2015  21:36:50         PAGE  4
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-0000A0 A2AC           00150     BTFSS TXSTA, TRMT, 0
-0000A2 EF?? F???      00151     GOTO WAITTX
-0000A6 0012           00152     RETURN
-0000A8                00153 SERIAL
-0000A8 CFAE F001      00154     MOVFF RCREG, TEMP
-0000AC 5001           00155     MOVF TEMP, 0
-0000AE EC?? F???      00156     CALL CHECKIDBIT
-0000B2 EC?? F???      00157     CALL SEND
-0000B6 0012           00158     RETURN
-0000B8                00159 CHECKRX
-0000B8 BA9E           00160     BTFSC PIR1, RCIF, 0
-0000BA EC?? F???      00161     CALL SERIAL
-0000BE 0012           00162     RETURN
-                      00163 
-                      00164 ;********
-                      00165 ;* MAIN *
-                      00166 ;********
-                      00167 
-0000C0                00168 MAIN
-0000C0 EC?? F???      00169     CALL INIT_CPU
-0000C4 EC?? F???      00170     CALL INIT_PORTS
-0000C8 EC?? F???      00171     CALL INIT_INTERRUPTS
-0000CC EC?? F???      00172     CALL INIT_TXRX
-                      00173 
-0000D0                00174 LOOP
-0000D0 EC?? F???      00175     CALL CHECKRX
-0000D4 EF?? F???      00176     GOTO LOOP
-                      00177 
-                      00178 ;*******
-                      00179 ;* END *
-                      00180 ;*******
-                      00181 
-                      00182     END
-MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   7-31-2015  20:08:27         PAGE  5
+000088 2A02           00150     INCF BYTES, 1, 0
+00008A 0E07           00151     MOVLW 0x07
+00008C 5C02           00152     SUBWF BYTES, 0, 0
+00008E B4D8           00153     BTFSC STATUS, Z, 0
+000090 EC?? F???      00154     CALL COUNTBYTES
+000094 EF?? F???      00155     GOTO AVOIDCHECKIDBIT
+                      00156 
+000098                00157 INCPROGRESS
+000098 988B           00158     BCF LATC, 4, 0
+00009A 888B           00159     BSF LATC, 4, 0
+00009C 9200           00160     BCF FLAGS, IDBIT, 0
+00009E 0012           00161     RETURN
+                      00162     
+0000A0                00163 CHECKIDVALUE
+0000A0 C001 F003      00164     MOVFF TEMP, IDVALUE
+0000A4 0E02           00165     MOVLW 0x02
+0000A6 5C03           00166     SUBWF IDVALUE, 0, 0
+0000A8 A4D8           00167     BTFSS STATUS, Z, 0
+0000AA EC?? F???      00168     CALL INCPROGRESS
+0000AE 0012           00169     RETURN
+                      00170     
+0000B0                00171 CHECKIDBIT
+0000B0 B200           00172     BTFSC FLAGS, IDBIT, 0
+0000B2 EF?? F???      00173     GOTO CHECKVALORS
+0000B6 8200           00174     BSF FLAGS, IDBIT, 0
+0000B8 EC?? F???      00175     CALL CHECKIDVALUE
+0000BC                00176 AVOIDCHECKIDBIT
+0000BC 0012           00177     RETURN
+                      00178     
+0000BE                00179 SEND
+0000BE 8AAC           00180     BSF TXSTA, TXEN, 0
+0000C0 C001 FFAD      00181     MOVFF TEMP, TXREG
+0000C4                00182 WAITTX
+0000C4 A2AC           00183     BTFSS TXSTA, TRMT, 0
+0000C6 EF?? F???      00184     GOTO WAITTX
+0000CA 0012           00185     RETURN
+0000CC                00186 SERIAL
+0000CC CFAE F001      00187     MOVFF RCREG, TEMP
+0000D0 5001           00188     MOVF TEMP, 0
+0000D2 EC?? F???      00189     CALL CHECKIDBIT
+0000D6 EC?? F???      00190     CALL SEND
+0000DA 0012           00191     RETURN
+0000DC                00192 CHECKRX
+0000DC BA9E           00193     BTFSC PIR1, RCIF, 0
+0000DE EC?? F???      00194     CALL SERIAL
+0000E2 0012           00195     RETURN
+                      00196 
+0000E4                00197 WAITTICS
+                      00198     ;CALL CHECKRX
+0000E4 0E63           00199     MOVLW 0x63
+0000E6 6404           00200     CPFSGT TICS
+0000E8 EF?? F???      00201     GOTO WAITTICS
+0000EC 0012           00202     RETURN
+MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   8-5-2015  21:36:50         PAGE  5
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0000EE                00203 CLRLEDS
+0000EE 968B           00204     BCF LATC, 3, 0
+0000F0 868B           00205     BSF LATC, 3, 0
+0000F2 0012           00206     RETURN
+0000F4                00207 SETLED
+0000F4 988B           00208     BCF LATC, 4, 0
+0000F6 888B           00209     BSF LATC, 4, 0
+0000F8 2A05           00210     INCF COUNTER, 1, 0
+0000FA                00211 SETLEDS
+0000FA 0E07           00212     MOVLW 0x07
+0000FC 6405           00213     CPFSGT COUNTER
+0000FE EF?? F???      00214     GOTO SETLED
+000102 6A05           00215     CLRF COUNTER
+000104 0012           00216     RETURN
+000106                00217 BLINKING
+000106 EC?? F???      00218     CALL SETLEDS
+00010A 6A04           00219     CLRF TICS, 0
+00010C 8A8B           00220     BSF LATC, 5, 0
+00010E EC?? F???      00221     CALL WAITTICS
+000112 EC?? F???      00222     CALL CLRLEDS
+000116 6A04           00223     CLRF TICS, 0
+000118 9A8B           00224     BCF LATC, 5, 0
+00011A EC?? F???      00225     CALL WAITTICS
+00011E 0012           00226     RETURN
+                      00227     
+                      00228 ;********
+                      00229 ;* MAIN *
+                      00230 ;********
+                      00231 
+000120                00232 MAIN
+000120 EC?? F???      00233     CALL INIT_CPU
+000124 EC?? F???      00234     CALL INIT_TMR0
+000128 EC?? F???      00235     CALL INIT_TXRX
+00012C EC?? F???      00236     CALL INIT_INTERRUPTS
+000130 EC?? F???      00237     CALL INIT_PORTS
+                      00238     
+000134                00239 LOOP
+000134 EC?? F???      00240     CALL CHECKRX
+                      00241     ;CALL BLINKING
+000138 EF?? F???      00242     GOTO LOOP
+                      00243 
+                      00244 ;*******
+                      00245 ;* END *
+                      00246 ;*******
+                      00247 
+                      00248     END
+MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   8-5-2015  21:36:50         PAGE  6
 
 
 SYMBOL TABLE
@@ -223,7 +295,6 @@ SYMBOL TABLE
 A                                 00000000
 ABDEN                             00000000
 ABDOVF                            00000007
-ACC                               00000002
 ACCESS                            00000000
 ACKDT                             00000005
 ACKEN                             00000004
@@ -265,7 +336,7 @@ AN6                               00000001
 AN7                               00000002
 AN8                               00000002
 AN9                               00000003
-AVOIDCHECKIDBIT                   00000098
+AVOIDCHECKIDBIT                   000000BC
 BANKED                            00000001
 BAUDCON                           00000FB8
 BAUDCTL                           00000FB8
@@ -273,17 +344,19 @@ BCLIE                             00000003
 BCLIF                             00000003
 BCLIP                             00000003
 BF                                00000000
-MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   7-31-2015  20:08:27         PAGE  6
+BGST                              00000005
+MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   8-5-2015  21:36:50         PAGE  7
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
-BGST                              00000005
+BLINKING                          00000106
 BOR                               00000000
 BRG16                             00000003
 BRGH                              00000002
 BSR                               00000FE0
+BYTES                             00000002
 C                                 00000000
 C1INV                             00000004
 C1N                               00000000
@@ -325,19 +398,19 @@ CCPR2                             00000FBB
 CCPR2H                            00000FBC
 CCPR2L                            00000FBB
 CFGS                              00000006
-CHECKIDBIT                        0000008C
-CHECKIDVALUE                      0000007C
-CHECKRX                           000000B8
-CHECKVALORS                       00000064
+CHECKIDBIT                        000000B0
+CHECKIDVALUE                      000000A0
+CHECKRX                           000000DC
+CHECKVALORS                       00000088
 CHS0                              00000002
 CHS1                              00000003
-CHS2                              00000004
-MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   7-31-2015  20:08:27         PAGE  7
+MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   8-5-2015  21:36:50         PAGE  8
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+CHS2                              00000004
 CHS3                              00000005
 CIS                               00000003
 CK                                00000006
@@ -345,6 +418,7 @@ CKE                               00000006
 CKP                               00000004
 CLKI                              00000007
 CLKO                              00000006
+CLRLEDS                           000000EE
 CM0                               00000000
 CM1                               00000001
 CM2                               00000002
@@ -352,7 +426,8 @@ CMCON                             00000FB4
 CMIE                              00000006
 CMIF                              00000006
 CMIP                              00000006
-COUNTBYTES                        0000005E
+COUNTBYTES                        00000082
+COUNTER                           00000005
 CREN                              00000004
 CS                                00000002
 CSRC                              00000007
@@ -388,15 +463,15 @@ ECCPAS1                           00000005
 ECCPAS2                           00000006
 ECCPASE                           00000007
 EEADR                             00000FA9
-EECON1                            00000FA6
-EECON2                            00000FA7
-EEDATA                            00000FA8
-MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   7-31-2015  20:08:27         PAGE  8
+MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   8-5-2015  21:36:50         PAGE  9
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+EECON1                            00000FA6
+EECON2                            00000FA7
+EEDATA                            00000FA8
 EEIE                              00000004
 EEIF                              00000004
 EEIP                              00000004
@@ -424,7 +499,7 @@ GIE_GIEH                          00000007
 GO                                00000001
 GO_DONE                           00000001
 GO_NOT_DONE                       00000001
-HIGH_INT                          0000001C
+HIGH_INT                          0000001A
 HLVDCON                           00000FD2
 HLVDEN                            00000004
 HLVDIE                            00000002
@@ -440,22 +515,23 @@ IBOV                              00000005
 IDBIT                             00000001
 IDLEN                             00000007
 IDVALUE                           00000003
-INCPROGRESS                       00000074
+INCPROGRESS                       00000098
 INDF0                             00000FEF
 INDF1                             00000FE7
 INDF2                             00000FDF
-INIT_CPU                          00000020
-INIT_INTERRUPTS                   00000040
-INIT_PORTS                        00000028
-INIT_TXRX                         00000048
-INT0                              00000000
-INT0E                             00000004
-MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   7-31-2015  20:08:27         PAGE  9
+INIT_CPU                          0000002C
+INIT_INTERRUPTS                   00000042
+INIT_PORTS                        00000064
+MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   8-5-2015  21:36:50         PAGE 10
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+INIT_TMR0                         00000034
+INIT_TXRX                         0000004E
+INT0                              00000000
+INT0E                             00000004
 INT0F                             00000001
 INT0IE                            00000004
 INT0IF                            00000001
@@ -505,16 +581,16 @@ LATB                              00000F8A
 LATB0                             00000000
 LATB1                             00000001
 LATB2                             00000002
-LATB3                             00000003
-LATB4                             00000004
-LATB5                             00000005
-LATB6                             00000006
-MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   7-31-2015  20:08:27         PAGE 10
+MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   8-5-2015  21:36:50         PAGE 11
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+LATB3                             00000003
+LATB4                             00000004
+LATB5                             00000005
+LATB6                             00000006
 LATB7                             00000007
 LATC                              00000F8B
 LATC0                             00000000
@@ -538,8 +614,7 @@ LATE                              00000F8D
 LATE0                             00000000
 LATE1                             00000001
 LATE2                             00000002
-LOOP                              000000D0
-LOW_INT                           0000001E
+LOOP                              00000134
 LVDCON                            00000FD2
 LVDEN                             00000004
 LVDIE                             00000002
@@ -553,7 +628,7 @@ LVV0                              00000000
 LVV1                              00000001
 LVV2                              00000002
 LVV3                              00000003
-MAIN                              000000C0
+MAIN                              00000120
 MCLR                              00000003
 N                                 00000004
 NOT_A                             00000005
@@ -565,15 +640,15 @@ NOT_MCLR                          00000003
 NOT_PD                            00000002
 NOT_POR                           00000001
 NOT_RBPU                          00000007
-NOT_RD                            00000000
-NOT_RI                            00000004
-NOT_SS                            00000005
-MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   7-31-2015  20:08:27         PAGE 11
+MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   8-5-2015  21:36:50         PAGE 12
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+NOT_RD                            00000000
+NOT_RI                            00000004
+NOT_SS                            00000005
 NOT_T1SYNC                        00000002
 NOT_T3SYNC                        00000002
 NOT_TO                            00000003
@@ -624,15 +699,15 @@ PIE1                              00000F9D
 PIE2                              00000FA0
 PIR1                              00000F9E
 PIR2                              00000FA1
-PLLEN                             00000006
-PLUSW0                            00000FEB
-PLUSW1                            00000FE3
-MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   7-31-2015  20:08:27         PAGE 12
+MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   8-5-2015  21:36:50         PAGE 13
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+PLLEN                             00000006
+PLUSW0                            00000FEB
+PLUSW1                            00000FE3
 PLUSW2                            00000FDB
 POR                               00000001
 PORTA                             00000F80
@@ -683,15 +758,15 @@ RA6                               00000006
 RA7                               00000007
 RB0                               00000000
 RB1                               00000001
-RB2                               00000002
-RB3                               00000003
-RB4                               00000004
-MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   7-31-2015  20:08:27         PAGE 13
+MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   8-5-2015  21:36:50         PAGE 14
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+RB2                               00000002
+RB3                               00000003
+RB4                               00000004
 RB5                               00000005
 RB6                               00000006
 RB7                               00000007
@@ -742,22 +817,24 @@ S                                 00000003
 SBOREN                            00000006
 SCK                               00000003
 SCKP                              00000004
-SCL                               00000003
-SCS0                              00000000
-SCS1                              00000001
-MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   7-31-2015  20:08:27         PAGE 14
+MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   8-5-2015  21:36:50         PAGE 15
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+SCL                               00000003
+SCS0                              00000000
+SCS1                              00000001
 SDA                               00000004
 SDI                               00000004
 SDO                               00000005
 SEN                               00000000
-SEND                              0000009A
+SEND                              000000BE
 SENDB                             00000003
-SERIAL                            000000A8
+SERIAL                            000000CC
+SETLED                            000000F4
+SETLEDS                           000000FA
 SMP                               00000007
 SP0                               00000000
 SP1                               00000001
@@ -799,17 +876,17 @@ T0IE                              00000005
 T0IF                              00000002
 T0PS0                             00000000
 T0PS1                             00000001
-T0PS2                             00000002
-T0SE                              00000004
-T13CKI                            00000000
-T1CKI                             00000000
-T1CKPS0                           00000004
-MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   7-31-2015  20:08:27         PAGE 15
+MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   8-5-2015  21:36:50         PAGE 16
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+T0PS2                             00000002
+T0SE                              00000004
+T13CKI                            00000000
+T1CKI                             00000000
+T1CKPS0                           00000004
 T1CKPS1                           00000005
 T1CON                             00000FCD
 T1OSCEN                           00000003
@@ -836,6 +913,7 @@ TBLPTRH                           00000FF7
 TBLPTRL                           00000FF6
 TBLPTRU                           00000FF8
 TEMP                              00000001
+TICS                              00000004
 TMR0                              00000FD6
 TMR0H                             00000FD7
 TMR0IE                            00000005
@@ -857,18 +935,18 @@ TMR2IF                            00000001
 TMR2IP                            00000001
 TMR2ON                            00000002
 TMR3                              00000FB2
+MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   8-5-2015  21:36:50         PAGE 17
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
 TMR3CS                            00000001
 TMR3H                             00000FB3
 TMR3IE                            00000001
 TMR3IF                            00000001
 TMR3IP                            00000001
 TMR3L                             00000FB2
-MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   7-31-2015  20:08:27         PAGE 16
-
-
-SYMBOL TABLE
-  LABEL                             VALUE 
-
 TMR3ON                            00000000
 TO                                00000003
 TOS                               00000FFD
@@ -916,18 +994,18 @@ TRISD5                            00000005
 TRISD6                            00000006
 TRISD7                            00000007
 TRISE                             00000F96
+MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   8-5-2015  21:36:50         PAGE 18
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
 TRISE0                            00000000
 TRISE1                            00000001
 TRISE2                            00000002
 TRMT                              00000001
 TUN0                              00000000
 TUN1                              00000001
-MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   7-31-2015  20:08:27         PAGE 17
-
-
-SYMBOL TABLE
-  LABEL                             VALUE 
-
 TUN2                              00000002
 TUN3                              00000003
 TUN4                              00000004
@@ -949,7 +1027,8 @@ VPP                               00000003
 VREFM                             00000002
 VREFP                             00000003
 W                                 00000000
-WAITTX                            000000A0
+WAITTICS                          000000E4
+WAITTX                            000000C4
 WCOL                              00000007
 WDTCON                            00000FD1
 WR                                00000001
@@ -974,6 +1053,12 @@ _CCP2MX_RC1_3H                    000000FF
 _CONFIG1H                         00300001
 _CONFIG2H                         00300003
 _CONFIG2L                         00300002
+MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   8-5-2015  21:36:50         PAGE 19
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
 _CONFIG3H                         00300005
 _CONFIG4L                         00300006
 _CONFIG5H                         00300009
@@ -981,12 +1066,6 @@ _CONFIG5L                         00300008
 _CONFIG6H                         0030000B
 _CONFIG6L                         0030000A
 _CONFIG7H                         0030000D
-MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   7-31-2015  20:08:27         PAGE 18
-
-
-SYMBOL TABLE
-  LABEL                             VALUE 
-
 _CONFIG7L                         0030000C
 _CP0_OFF_5L                       000000FF
 _CP0_ON_5L                        000000FE
@@ -1033,6 +1112,12 @@ _OSC_INTIO2_1H                    000000F8
 _OSC_LP_1H                        000000F0
 _OSC_RCIO_1H                      000000F7
 _OSC_RC_1H                        000000F3
+MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   8-5-2015  21:36:50         PAGE 20
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
 _OSC_XT_1H                        000000F1
 _PBADEN_ANA_3H                    000000FF
 _PBADEN_DIG_3H                    000000FD
@@ -1040,12 +1125,6 @@ _PWRT_OFF_2L                      000000FF
 _PWRT_ON_2L                       000000FE
 _STVREN_OFF_4L                    000000FE
 _STVREN_ON_4L                     000000FF
-MPASM 5.62  /USERS/ROGER/DOCUMENTS/GITHUB/SL   7-31-2015  20:08:27         PAGE 19
-
-
-SYMBOL TABLE
-  LABEL                             VALUE 
-
 _WDTPS_1024_2H                    000000F5
 _WDTPS_128_2H                     000000EF
 _WDTPS_16384_2H                   000000FD

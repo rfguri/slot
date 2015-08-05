@@ -28,8 +28,10 @@ FLAGS EQU 0x00
 IDBIT EQU 0x01
     
 TEMP EQU 0x01
-ACC EQU 0x02
+BYTES EQU 0x02
 IDVALUE EQU 0x03
+TICS EQU 0x04
+COUNTER EQU 0x05
  
 ;*************
 ;* CONSTANTS *
@@ -46,17 +48,27 @@ IDVALUE EQU 0x03
 	GOTO HIGH_INT
 
     ORG 0x000018
-	GOTO LOW_INT
+	RETFIE FAST
 
 ;*******
 ;* RSI *
 ;*******
 
 HIGH_INT
-    retfie
-
-LOW_INT
-    retfie	
+    BTFSS INTCON, TMR0IF, 0
+    RETFIE FAST
+    
+    ; Resetegem Timer0
+    BCF INTCON, TMR0IF
+    MOVLW   0xE0
+    MOVWF   TMR0H, 0
+    MOVLW   0xBF
+    MOVWF   TMR0L, 0
+    
+    ; Incrementem tics
+    INCF TICS, 1, 0
+    
+    RETFIE FAST
 
 ;*********
 ;* INITS *
@@ -68,29 +80,28 @@ INIT_CPU
     BSF OSCTUNE, PLLEN, 0
     RETURN
     
-INIT_PORTS
-    CLRF TRISB
-    CLRF PORTB
-    
-    BCF TRISC, 3, 0
-    BCF TRISC, 4, 0
-    BCF LATC, 3, 0
-    BSF LATC, 3, 0
-    
-    CLRF FLAGS
-    CLRF IDBIT
-    CLRF TEMP
-    CLRF ACC
-    CLRF IDVALUE
-    
+INIT_TMR0 
+    ; Tins = 4 / 32MHz = 125ns
+    ; Timer = 1 ms
+    ; Steps = 1ms / 125ns = 8000
+    ; Timer (16 bits) = 65535
+    ; TMR0H/TMR0L = 57535 = 0xE0BF
+    MOVLW   0x88
+    MOVWF   T0CON, 0
+    MOVLW   0xE0
+    MOVWF   TMR0H, 0
+    MOVLW   0xBF
+    MOVWF   TMR0L, 0
     RETURN
-
+    
 INIT_INTERRUPTS
-    BSF RCON, IPEN, 0
-    BCF INTCON, GIE/GIEH, 0
-    BCF INTCON, PEIE/GIEL, 0
+    BSF	RCON, IPEN      ; disable priority interrups
+    BSF	INTCON, TMR0IE  ; enables the TMR0 overflow interrupt
+    BCF	INTCON, TMR0IF  ; clear the TMR0 overflow flag
+    BSF INTCON, GIE     ; enables all unmasked interrupts
+    BSF INTCON, PEIE    ; enables all unmasked peripheral interrupts
     RETURN
-
+    
 INIT_TXRX
     MOVLW 0x00
     MOVWF SPBRGH
@@ -103,6 +114,28 @@ INIT_TXRX
     BSF TXSTA, TXEN, 0 ; Enable transmision
     BSF RCSTA, CREN, 0 ; Enable reception
     RETURN
+    
+INIT_PORTS
+    CLRF TRISB
+    CLRF PORTB
+    
+    BCF TRISC, 3, 0
+    BCF LATC, 3, 0
+    BSF LATC, 3, 0
+    
+    BCF TRISC, 4, 0  
+    BCF LATC, 4, 0
+    
+    BCF TRISC, 5, 0
+    BCF LATC, 5, 0
+    
+    CLRF FLAGS
+    CLRF IDBIT
+    CLRF TEMP
+    CLRF BYTES
+    CLRF IDVALUE
+    
+    RETURN
 
 ;*************
 ;* FUNCTIONS *
@@ -110,20 +143,20 @@ INIT_TXRX
 
 COUNTBYTES
     BCF FLAGS, IDBIT, 0
-    CLRF ACC, 0
+    CLRF BYTES, 0
     RETURN
     
 CHECKVALORS
-    INCF ACC, 1, 0
+    INCF BYTES, 1, 0
     MOVLW 0x07
-    SUBWF ACC, 0, 0
+    SUBWF BYTES, 0, 0
     BTFSC STATUS, Z, 0
     CALL COUNTBYTES
     GOTO AVOIDCHECKIDBIT
 
 INCPROGRESS
-    BSF LATC, 4, 0
     BCF LATC, 4, 0
+    BSF LATC, 4, 0
     BCF FLAGS, IDBIT, 0
     RETURN
     
@@ -161,18 +194,51 @@ CHECKRX
     CALL SERIAL
     RETURN
 
+WAITTICS
+    ;CALL CHECKRX
+    MOVLW 0x63
+    CPFSGT TICS
+    GOTO WAITTICS
+    RETURN
+CLRLEDS
+    BCF LATC, 3, 0
+    BSF LATC, 3, 0
+    RETURN
+SETLED
+    BCF LATC, 4, 0
+    BSF LATC, 4, 0
+    INCF COUNTER, 1, 0
+SETLEDS
+    MOVLW 0x07
+    CPFSGT COUNTER
+    GOTO SETLED
+    CLRF COUNTER
+    RETURN
+BLINKING
+    CALL SETLEDS
+    CLRF TICS, 0
+    BSF LATC, 5, 0
+    CALL WAITTICS
+    CALL CLRLEDS
+    CLRF TICS, 0
+    BCF LATC, 5, 0
+    CALL WAITTICS
+    RETURN
+    
 ;********
 ;* MAIN *
 ;********
 
 MAIN
     CALL INIT_CPU
-    CALL INIT_PORTS
-    CALL INIT_INTERRUPTS
+    CALL INIT_TMR0
     CALL INIT_TXRX
-
+    CALL INIT_INTERRUPTS
+    CALL INIT_PORTS
+    
 LOOP
     CALL CHECKRX
+    ;CALL BLINKING
     GOTO LOOP
 
 ;*******
