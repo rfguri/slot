@@ -28,6 +28,10 @@ public class MainWindowController implements ActionListener{
 	private static final byte UART = '0';
 	private static final byte IR = '1';
 	private static final byte PB = '2';
+	private static final byte START = '3';
+	private static final byte END = '4';
+	private static final boolean DEBUG = true;
+	private static final int TIME = 200;
 	
 	public MainWindowController(MainWindowView view, MainWindowModel model){
 		try{
@@ -64,7 +68,6 @@ public class MainWindowController implements ActionListener{
 						try{
 							setupUART();
 							sendBytes(UART);
-							//sendBytes(PB);
 						}catch (Exception e1){
 							e1.printStackTrace();
 						}
@@ -81,15 +84,22 @@ public class MainWindowController implements ActionListener{
 	}
 	
 	private void sendPB() throws Exception {
+		System.out.println();
 		if (stepp < 1) {
 			if (k <= 1) k += stepp;
 			else {
+				if (DEBUG) Thread.sleep(TIME);
+				if (DEBUG) System.out.println("Sending: " + PB + "...");
 				sp.writeByte((byte) PB);
+				System.out.println("Recieved: " + sp.readByte());
 				k = stepp;
 				c++;
 			}
-		} else for (int l = 0; l < Math.ceil(stepp); l++) {
+		} else for (int l = 0; l < (int)stepp; l++) {
+			if (DEBUG) Thread.sleep(TIME);
+			if (DEBUG) System.out.println("Sending: " + PB + "...");
 			sp.writeByte((byte) PB);
+			System.out.println("Recieved: " + sp.readByte());
 			c++;
 		}
 	}
@@ -102,7 +112,6 @@ public class MainWindowController implements ActionListener{
 	}
 	
 	private void sendBytes(byte id) throws Exception{
-		sp.writeByte(id);
 		if (id == UART) sendUART();
 	}
 	
@@ -133,6 +142,7 @@ public class MainWindowController implements ActionListener{
 	}
 	
 	private void sendCharacters(String content) throws Exception {
+		view.setProgressBarValue(0);
 		String[] games = content.split("\n");
 		char[] bytes = new char[4];
 		int price = 0, total = 0, size = games.length;
@@ -140,23 +150,46 @@ public class MainWindowController implements ActionListener{
 		stepp = (float) (8.0 / games.length);
 		System.out.println(stepp);
 		System.out.println(step);
+		System.out.println();
+		if (DEBUG) Thread.sleep(TIME);
+		if (DEBUG) System.out.println("Sending: " + START + "...");
+		sp.writeByte(START);
+		System.out.println("Recieved: " + sp.readByte());
 		for (int i = 0; i < games.length; i++) {
+			System.out.println();
+			if (DEBUG) Thread.sleep(TIME);
+			if (DEBUG) System.out.println("Sending: " + UART + "...");
+			sp.writeByte(UART);
+			System.out.println("Recieved: " + sp.readByte());
+			System.out.println();
 			for (int j = 0; j < games[i].length(); j++) {
-				Thread.sleep(100);
 				char b = games[i].charAt(j);
-				System.out.println(b);
 				if (j >= 3 && j <= 6) bytes[j-3] = (char)b;
 				pb += step;
-				System.out.printf("PB --> %f", pb);
-				view.setProgressBarValue((int) Math.ceil(pb));
+				view.setProgressBarValue((int) (Math.ceil(pb)/1.5));
+				if (DEBUG) Thread.sleep(TIME);
+				if (DEBUG) System.out.println("Sending: " + (char)b + "...");
+				sp.writeByte((byte) b);
+				System.out.println("Recieved: " + (char) sp.readByte());
 			}
 			price = Integer.parseInt(new String(bytes));
     		total += price;
-			System.out.println();
 			sendPB();
 		}
-		for (int i = 0; i <= 8 - c; i++) sp.writeByte((byte) PB);
-		view.setProgressBarValue(100);
+		System.out.println();
+		for (int i = 0; i <= 8 - c; i++) {
+			if (DEBUG) Thread.sleep(TIME);
+			if (DEBUG) System.out.println("Sending: " + PB + "...");
+			sp.writeByte((byte) PB);
+			System.out.println("Recieved: " + sp.readByte());
+			pb += step;
+			view.setProgressBarValue((int) (Math.ceil(pb)/1.5));
+		}
+		System.out.println();
+		if (DEBUG) Thread.sleep(TIME);
+		if (DEBUG) System.out.println("Sending: " + END + "...");
+		sp.writeByte((byte) END);
+		System.out.println("Recieved: " + sp.readByte());
 		sp.closePort();
         view.setProgressBarValue(100);
         view.setPrice(total);

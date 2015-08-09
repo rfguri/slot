@@ -16,7 +16,7 @@
 ;* CONFIGURATIONS *
 ;******************
 
-    CONFIG OSC = INTIO1
+    CONFIG OSC = INTIO2
     CONFIG PBADEN = DIG
     CONFIG WDT = OFF
 
@@ -26,10 +26,13 @@
 
 FLAGS EQU 0x00
 IDBIT EQU 0x01
+ENDBIT EQU 0x02
     
 TEMP EQU 0x01
-ACC EQU 0x02
+BITS EQU 0x02
 IDVALUE EQU 0x03
+TICS EQU 0x04
+COUNTER EQU 0x05
  
 ;*************
 ;* CONSTANTS *
@@ -46,100 +49,195 @@ IDVALUE EQU 0x03
 	GOTO HIGH_INT
 
     ORG 0x000018
-	GOTO LOW_INT
+	RETFIE FAST
 
 ;*******
 ;* RSI *
 ;*******
 
 HIGH_INT
-    retfie
-
-LOW_INT
-    retfie	
-
+    BTFSS INTCON, TMR0IF, 0
+    RETFIE FAST
+    
+    ; Reset Timer0
+    BCF INTCON, TMR0IF, 0
+    MOVLW 0xE0
+    MOVWF TMR0H, 0
+    MOVLW 0xBF
+    MOVWF TMR0L, 0
+    
+    ; Increment Tics
+    INCF TICS, 1, 0
+    
+    RETFIE FAST
+    
 ;*********
 ;* INITS *
 ;*********
-
+  
+INIT_TMR0
+    ; Timer = 1ms , Tins = 4 / 32MHz = 125ns
+    ; Timer = 1ms
+    ; Steps = 1ms / 125ns = 8000 steps
+    ; Timer (16 bits) = 65535 - 8000 = 57535 = 0xE0BF
+    MOVLW 0x88
+    MOVWF T0CON, 0
+    MOVLW 0xE0
+    MOVWF TMR0H, 0
+    MOVLW 0xBF
+    MOVWF TMR0L, 0
+    RETURN
+    
+INIT_INTERRUPTS
+    BSF RCON, IPEN, 0 ; Enable priority interrupts
+    BSF INTCON, GIE, 0 ; Enable interrupts
+    BSF INTCON, PEIE, 0 ; Enable peripheral interrupt
+    BSF INTCON, TMR0IE, 0 ; Enable TMR0 overflow interrupt
+    BSF INTCON2, TMR0IP, 0 ; Enable TMR0 high priority interrupt
+    BCF INTCON, TMR0IF, 0 ; Clear TMR0 overflow flag
+    RETURN
+    
 INIT_CPU
+    ; 32MHz Internal Oscilator
     MOVLW 0x74
-    MOVWF OSCCON ; 8MHz Internal Oscilator
+    MOVWF OSCCON
     BSF OSCTUNE, PLLEN, 0
     RETURN
     
-INIT_PORTS
-    CLRF TRISB
-    CLRF PORTB
-    
-    BCF TRISC, 3, 0
-    BCF TRISC, 4, 0
-    BCF LATC, 3, 0
-    BSF LATC, 3, 0
-    
-    CLRF FLAGS
-    CLRF IDBIT
-    CLRF TEMP
-    CLRF ACC
-    CLRF IDVALUE
-    
-    RETURN
-
-INIT_INTERRUPTS
-    BSF RCON, IPEN, 0
-    BCF INTCON, GIE/GIEH, 0
-    BCF INTCON, PEIE/GIEL, 0
-    RETURN
-
 INIT_TXRX
     MOVLW 0x00
     MOVWF SPBRGH
     MOVLW 0x19
     MOVWF SPBRG
     BCF TXSTA, BRGH, 0
-    BCF BAUDCON, BRG16, 0 ; Baud rate generator at 19200
-    BCF TXSTA, SYNC, 0 ; Asynchronous mode
+    BCF BAUDCON, BRG16, 0 ; Enable baud rate generator at 19200
+    BCF TXSTA, SYNC, 0 ; Enable Asynchronous mode
     BSF RCSTA, SPEN, 0 ; Enable serial
     BSF TXSTA, TXEN, 0 ; Enable transmision
     BSF RCSTA, CREN, 0 ; Enable reception
     RETURN
+    
+INIT_PORTS
+    ; A8..A11 Output
+    BCF TRISB, 0, 0
+    BCF TRISB, 1, 0
+    BCF TRISB, 2, 0
+    BCF TRISB, 3, 0
+    
+    ; IR TX/RX
+    BSF TRISB, 4, 0
+    BSF TRISB, 5, 0
+        
+    ; MCLR Progressbar Output
+    BCF TRISC, 3, 0
+    BCF LATC, 3, 0
+    BSF LATC, 3, 0
+    
+    ; Progressbar Output
+    BCF TRISC, 4, 0
+    BCF LATC, 4, 0
+    
+    ; Test pin
+    BCF TRISC, 5, 0
+    BCF LATC, 5, 0
+    
+    CLRF FLAGS
+    CLRF IDBIT
+    CLRF TEMP
+    CLRF BITS
+    CLRF IDVALUE
+    CLRF TICS
+    CLRF COUNTER
+    
+    RETURN
 
+    
+;******************
+;* TEST FUNCTIONS *
+;******************
+
+TEST
+    BSF LATC, 5, 0
+    BCF LATC, 5, 0
+    BCF FLAGS, IDBIT, 0
+    RETURN    
+    
 ;*************
 ;* FUNCTIONS *
 ;*************
-
-COUNTBYTES
-    BCF FLAGS, IDBIT, 0
-    CLRF ACC, 0
+CHECKWAITTICS
+    CALL CHECKRX
+    BTFSS FLAGS, ENDBIT, 0
     RETURN
+    MOVLW 0x63 ; 100ms
+    CPFSEQ TICS
+    GOTO CHECKWAITTICS
+    RETURN
+CLRLEDS
+    BCF LATC, 3, 0
+    BSF LATC, 3, 0
+    RETURN
+INCCOUNTER
+    BSF LATC, 4, 0
+    BCF LATC, 4, 0
+    BCF FLAGS, IDBIT, 0
+    INCF COUNTER, 1, 0
+SETLEDS
+    MOVLW 0x08
+    CPFSEQ COUNTER
+    GOTO INCCOUNTER
+    CLRF COUNTER
+    RETURN
+BLINKING
+    CALL SETLEDS
+    CLRF TICS, 0
+    CALL CHECKWAITTICS
+    CALL CLRLEDS
+    CLRF TICS, 0
+    CALL CHECKWAITTICS
+    RETURN    
     
-CHECKVALORS
-    INCF ACC, 1, 0
+ENDGAME
+    CLRF BITS, 0
+    BCF FLAGS, IDBIT, 0
+    RETURN   
+CHECKGAME
+    INCF BITS, 1, 0
     MOVLW 0x07
-    SUBWF ACC, 0, 0
-    BTFSC STATUS, Z, 0
-    CALL COUNTBYTES
+    CPFSLT BITS
+    CALL ENDGAME
     GOTO AVOIDCHECKIDBIT
-
 INCPROGRESS
     BSF LATC, 4, 0
     BCF LATC, 4, 0
     BCF FLAGS, IDBIT, 0
-    RETURN
-    
+    BCF FLAGS, ENDBIT, 0
+    RETURN     
+SETENDBIT
+    BSF FLAGS, ENDBIT, 0
+    BCF FLAGS, IDBIT, 0
+    GOTO AVOIDPROGRESS
 CHECKIDVALUE
-    MOVFF TEMP, IDVALUE
-    MOVLW 0x02
-    SUBWF IDVALUE, 0, 0
-    BTFSS STATUS, Z, 0
+    MOVLW 0x34 ; 4 -> End RX
+    CPFSLT IDVALUE
+    GOTO SETENDBIT
+    MOVLW 0x33 ; 3 -> Start RX
+    CPFSLT IDVALUE
+    CALL CLRLEDS
+    MOVLW 0x32 ; 2 -> Progress bar
+    CPFSLT IDVALUE, 0
     CALL INCPROGRESS
     RETURN
-    
 CHECKIDBIT
-    BTFSC FLAGS, IDBIT, 0
-    GOTO CHECKVALORS
     BSF FLAGS, IDBIT, 0
-    CALL CHECKIDVALUE
+    MOVFF TEMP, IDVALUE
+    GOTO CHECKIDVALUE
+AVOIDPROGRESS
+    RETURN   
+CHECKBIT
+    BTFSC FLAGS, IDBIT, 0
+    GOTO CHECKGAME
+    CALL CHECKIDBIT
 AVOIDCHECKIDBIT
     RETURN
     
@@ -153,25 +251,28 @@ WAITTX
 SERIAL
     MOVFF RCREG, TEMP
     MOVF TEMP, 0
-    CALL CHECKIDBIT
+    CALL CHECKBIT
     CALL SEND
     RETURN
 CHECKRX
     BTFSC PIR1, RCIF, 0
     CALL SERIAL
     RETURN
-
+    
 ;********
 ;* MAIN *
 ;********
 
 MAIN
-    CALL INIT_CPU
-    CALL INIT_PORTS
     CALL INIT_INTERRUPTS
+    CALL INIT_TMR0
+    CALL INIT_CPU
     CALL INIT_TXRX
+    CALL INIT_PORTS
 
 LOOP
+    BTFSC FLAGS, ENDBIT, 0
+    CALL BLINKING
     CALL CHECKRX
     GOTO LOOP
 
