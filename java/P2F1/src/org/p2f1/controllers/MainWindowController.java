@@ -22,16 +22,11 @@ public class MainWindowController implements ActionListener{
 	private MainWindowView view = null;
 	private MainWindowModel model = null;
 	private SerialPort sp = null;
-	private FileReader file = null;
 	private int c = 0;
 	private float stepp = 0, k = 0;
-	private static final byte UART = '0';
-	private static final byte IR = '5';
-	private static final byte PB = '2';
-	private static final byte START = '3';
-	private static final byte END = '4';
+	private static final byte UART = '0', PB = '1', START = '2', END = '3', IR = '4';
 	private static final boolean DEBUG = true;
-	private static final int TIME = 200;
+	private static final int TIME = 50;
 	
 	public MainWindowController(MainWindowView view, MainWindowModel model){
 		try{
