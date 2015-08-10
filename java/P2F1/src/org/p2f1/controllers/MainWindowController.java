@@ -23,10 +23,10 @@ public class MainWindowController implements ActionListener{
 	private MainWindowModel model = null;
 	private SerialPort sp = null;
 	private FileReader file = null;
-	public int c = 0;
+	private int c = 0;
 	private float stepp = 0, k = 0;
 	private static final byte UART = '0';
-	private static final byte IR = '1';
+	private static final byte IR = '5';
 	private static final byte PB = '2';
 	private static final byte START = '3';
 	private static final byte END = '4';
@@ -41,7 +41,6 @@ public class MainWindowController implements ActionListener{
 			this.view.associateController(this);
 			this.view.setBaudRateList(sp.getAvailableBaudRates());
 			this.view.setPortsList(sp.getPortList());
-			this.file = new FileReader(view.getFile());
 		}catch(Exception e){
 			System.out.println(e.getMessage());
 		}
@@ -55,12 +54,12 @@ public class MainWindowController implements ActionListener{
 				case MainWindowView.BTN_INFRAROJOS:
 					//TODO TX/RX IR
 					try {
+						setupUART();
 						sendBytes(IR);
 					} catch (Exception e2) {
 						// TODO Auto-generated catch block
 						e2.printStackTrace();
 					}
-					JOptionPane.showMessageDialog(null, "M'has de programar!", "Missatge",JOptionPane.INFORMATION_MESSAGE);
 					break;
 				case MainWindowView.BTN_UART:
 					//TODO TX/RX protocol 
@@ -113,10 +112,11 @@ public class MainWindowController implements ActionListener{
 	
 	private void sendBytes(byte id) throws Exception{
 		if (id == UART) sendUART();
+		else sendIR();
 	}
 	
 	private String readFile() throws IOException{
-	    BufferedReader reader = new BufferedReader(file);
+	    BufferedReader reader = new BufferedReader(new FileReader(view.getFile()));
 	    String line = null;
 	    StringBuilder stringBuilder = new StringBuilder();
 	    String ls = System.getProperty("line.separator");
@@ -124,7 +124,24 @@ public class MainWindowController implements ActionListener{
 	        stringBuilder.append(line);
 	        stringBuilder.append(ls);
 	    }
+	    reader.close();
 	    return stringBuilder.toString();
+	}
+	
+	private void sendIR() throws FileNotFoundException{
+		Thread t = new Thread(new Runnable(){
+	        public void run(){
+	        	try{
+	        		if (DEBUG) Thread.sleep(TIME);
+	        		if (DEBUG) System.out.println("Sending: " + IR + "...");
+	        		sp.writeByte(IR);
+	        		System.out.println("Recieve: " + sp.readByte());
+				}catch (Exception e) {
+					e.printStackTrace();
+				}
+	        }
+	    });
+	    t.start();
 	}
 	
 	private void sendUART() throws FileNotFoundException{
