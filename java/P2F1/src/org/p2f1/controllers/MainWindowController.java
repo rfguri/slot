@@ -83,17 +83,17 @@ public class MainWindowController implements ActionListener{
 			if (k <= 1) k += stepp;
 			else {
 				if (DEBUG) Thread.sleep(TIME);
-				if (DEBUG) System.out.println("Sending: " + PB + "...");
+				if (DEBUG) System.out.println("Sending: " + (char) PB + "...");
 				sp.writeByte((byte) PB);
-				System.out.println("Recieved: " + sp.readByte());
+				System.out.println("Recieved: " + (char) sp.readByte());
 				k = stepp;
 				c++;
 			}
 		} else for (int l = 0; l < (int)stepp; l++) {
 			if (DEBUG) Thread.sleep(TIME);
-			if (DEBUG) System.out.println("Sending: " + PB + "...");
+			if (DEBUG) System.out.println("Sending: " + (char) PB + "...");
 			sp.writeByte((byte) PB);
-			System.out.println("Recieved: " + sp.readByte());
+			System.out.println("Recieved: " + (char) sp.readByte());
 			c++;
 		}
 	}
@@ -127,10 +127,11 @@ public class MainWindowController implements ActionListener{
 		Thread t = new Thread(new Runnable(){
 	        public void run(){
 	        	try{
-	        		if (DEBUG) Thread.sleep(TIME);
-	        		if (DEBUG) System.out.println("Sending: " + IR + "...");
+	        		if (DEBUG) Thread.sleep(5000);
+	        		if (DEBUG) System.out.println("Sending: " + (char) IR + "...");
 	        		sp.writeByte(IR);
-	        		System.out.println("Recieve: " + sp.readByte());
+	        		System.out.println("Recieved: " + (char) sp.readByte());
+	        		sp.closePort();
 				}catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -164,15 +165,15 @@ public class MainWindowController implements ActionListener{
 		System.out.println(step);
 		System.out.println();
 		if (DEBUG) Thread.sleep(TIME);
-		if (DEBUG) System.out.println("Sending: " + START + "...");
+		if (DEBUG) System.out.println("Sending: " + (char) START + "...");
 		sp.writeByte(START);
-		System.out.println("Recieved: " + sp.readByte());
+		System.out.println("Recieved: " + (char) sp.readByte());
 		for (int i = 0; i < games.length; i++) {
 			System.out.println();
 			if (DEBUG) Thread.sleep(TIME);
-			if (DEBUG) System.out.println("Sending: " + UART + "...");
+			if (DEBUG) System.out.println("Sending: " + (char) UART + "...");
 			sp.writeByte(UART);
-			System.out.println("Recieved: " + sp.readByte());
+			System.out.println("Recieved: " + (char) sp.readByte());
 			System.out.println();
 			for (int j = 0; j < games[i].length(); j++) {
 				char b = games[i].charAt(j);
@@ -180,9 +181,9 @@ public class MainWindowController implements ActionListener{
 				pb += step;
 				view.setProgressBarValue((int) (Math.ceil(pb)/1.5));
 				if (DEBUG) Thread.sleep(TIME);
-				if (DEBUG) System.out.println("Sending: " + (char)b + "...");
+				if (DEBUG) System.out.println("Sending: " + (char) (char)b + "...");
 				sp.writeByte((byte) b);
-				System.out.println("Recieved: " + (char) sp.readByte());
+				System.out.println("Recieved: " + (char) (char) sp.readByte());
 			}
 			price = Integer.parseInt(new String(bytes));
     		total += price;
@@ -191,17 +192,17 @@ public class MainWindowController implements ActionListener{
 		System.out.println();
 		for (int i = 0; i <= 8 - c; i++) {
 			if (DEBUG) Thread.sleep(TIME);
-			if (DEBUG) System.out.println("Sending: " + PB + "...");
+			if (DEBUG) System.out.println("Sending: " + (char) PB + "...");
 			sp.writeByte((byte) PB);
-			System.out.println("Recieved: " + sp.readByte());
+			System.out.println("Recieved: " + (char) sp.readByte());
 			pb += step;
 			view.setProgressBarValue((int) (Math.ceil(pb)/1.5));
 		}
 		System.out.println();
 		if (DEBUG) Thread.sleep(TIME);
-		if (DEBUG) System.out.println("Sending: " + END + "...");
+		if (DEBUG) System.out.println("Sending: " + (char) END + "...");
 		sp.writeByte((byte) END);
-		System.out.println("Recieved: " + sp.readByte());
+		System.out.println("Recieved: " + (char) sp.readByte());
 		sp.closePort();
         view.setProgressBarValue(100);
         view.setPrice(total);
